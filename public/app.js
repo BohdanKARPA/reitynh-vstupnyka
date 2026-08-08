@@ -610,6 +610,8 @@ function renderTable() {
 
   // Куди б вклинився мій бал
   let myInserted = false;
+  // Нумеруємо самі, за балом: у номерах сайту свіжі заяви стоять у кінці.
+  let n = 0;
 
   for (const r of shown) {
     if (myScore != null && !myInserted && r.score < myScore) {
@@ -619,7 +621,7 @@ function renderTable() {
     const active = isActiveStatus(r.status);
     const tr = el('tr', [r.goesTo?.staysHere ? 'stays' : '', active ? '' : 'inactive'].filter(Boolean).join(' '));
     tr.append(
-      el('td', 'num', String(r.position ?? '')),
+      el('td', 'num', String(++n)),
       el('td', null, r.name || '—'),
       el('td', 'num', fmt(r.score)),
       el('td', 'num', `${r.priority ?? '—'}${r.basis ? ` (${r.basis})` : ''}`),
@@ -874,10 +876,11 @@ function renderPriority(r) {
   };
 
   const body = el('tbody');
+  let n = 0;
   for (const d of r.details) {
     const look = LOOK[d.outcome] || LOOK.unknown;
     const tr = el('tr', look.row);
-    tr.append(el('td', null, String(d.position ?? '—')));
+    tr.append(el('td', null, String(++n)));
     tr.append(el('td', null, d.name));
     tr.append(el('td', 'num', fmt(d.score)));
     tr.append(el('td', null, String(d.priority ?? '—')));
