@@ -251,8 +251,14 @@ function lanAddress() {
 
 server.listen(PORT, () => {
   const url = `http://localhost:${PORT}`;
-  const lan = lanAddress();
 
+  // На хостингу локальні адреси не мають сенсу — там своя публічна.
+  if (!process.stdout.isTTY) {
+    console.log(`Server listening on port ${PORT}`);
+    return;
+  }
+
+  const lan = lanAddress();
   console.log('');
   console.log('  Reytyng vstupnyka');
   console.log('  --------------------------------------');
