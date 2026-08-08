@@ -583,13 +583,22 @@ function renderResult(e) {
 
 function filteredRows() {
   const q = $('#table-search').value.trim().toLowerCase();
-  return DATA.rows.filter((r) => {
+  const rows = DATA.rows.filter((r) => {
     if (q && !(r.name || '').toLowerCase().includes(q)) return false;
     if (tableFilter === 'active') return isActiveStatus(r.status);
     if (tableFilter === 'budget') return r.basis === 'Б' && isActiveStatus(r.status);
     if (tableFilter === 'stays') return r.goesTo?.staysHere;
     if (tableFilter === 'quota') return Boolean(r.quota);
     return true;
+  });
+
+  // Сайт відсуває свіжі заяви («Заява надійшла з сайту») в кінець списку,
+  // хоч бал у них може бути вищий. Конкурс вирішує бал — сортуємо за ним.
+  return rows.sort((a, b) => {
+    const sa = typeof a.score === 'number' ? a.score : -Infinity;
+    const sb = typeof b.score === 'number' ? b.score : -Infinity;
+    if (sb !== sa) return sb - sa;
+    return (a.position ?? 0) - (b.position ?? 0);
   });
 }
 
