@@ -45,6 +45,16 @@ function loadStore() {
   }
 }
 
+/**
+ * Заява ще в конкурсі. Статусів багато й вони змінюються по ходу кампанії:
+ * «Допущено» на початку, далі «Рекомендовано (б)», «До наказу (б)» тощо.
+ * Вибувають лише відмови та скасування — простіше перелічити їх.
+ */
+const isActiveStatus = (s) => !/Відмова|Скасовано|Деактивовано|Відхилено/i.test(s || '');
+
+/** Чи дивимось завершену кампанію — від цього залежить час у формулюваннях. */
+const isPastYear = () => Boolean(DATA) && DATA.year !== String(new Date().getFullYear());
+
 /** Ключ спеціальності, однаковий у різні роки (ID щороку інші). */
 function specialtyKey(info) {
   return [info.university, info.specialty, info.program || '', info.level]
@@ -315,10 +325,15 @@ function renderNotice() {
   }
 
   if (DATA.resultSource === 'actual') {
+    const current = DATA.year === String(new Date().getFullYear());
     const n = el('div', 'notice');
-    n.innerHTML = `<strong>Це підсумки ${DATA.year} року, а не прогноз.</strong> ` +
-      'Прохідний бал тут — той, що склався насправді: він порахований по тих, кого справді ' +
-      'рекомендували до зарахування. Зручно як орієнтир, але щороку конкурс змінюється.';
+    n.innerHTML = current
+      ? '<strong>Рекомендації вже оприлюднені — це не прогноз.</strong> ' +
+        'Симуляції на сайті більше немає, натомість у кожної заяви стоїть справжній ' +
+        'результат. Прохідний бал порахований по тих, кого рекомендували до зарахування.'
+      : `<strong>Це підсумки ${DATA.year} року, а не прогноз.</strong> ` +
+        'Прохідний бал тут — той, що склався насправді: він порахований по тих, кого справді ' +
+        'рекомендували до зарахування. Зручно як орієнтир, але щороку конкурс змінюється.';
     box.append(n);
     return;
   }
@@ -481,13 +496,21 @@ const recalc = debounce(async () => {
 const VERDICTS = {
   'budget-safe': {
     cls: 'v-good', icon: '✅', title: 'Проходиш на бюджет',
-    text: (e) => e.method === 'actual'
-      ? `З таким балом ти проходив би на бюджет того року із запасом ${fmt(e.margin)} бала.`
-      : `Запас над прогнозованим прохідним балом — ${fmt(e.margin)} бала. Позиція впевнена.`,
+    text: (e) => {
+      if (e.method !== 'actual') {
+        return `Запас над прогнозованим прохідним балом — ${fmt(e.margin)} бала. Позиція впевнена.`;
+      }
+      // Минулий рік — «проходив би»; поточний — місця вже роздані.
+      return isPastYear()
+        ? `З таким балом ти проходив би на бюджет того року із запасом ${fmt(e.margin)} бала.`
+        : `Запас над прохідним балом — ${fmt(e.margin)} бала. Місця вже розподілені.`;
+    },
   },
   'budget-edge': {
     cls: 'v-warn', icon: '⚠️', title: 'Проходиш, але впритул',
-    text: (e) => `До прохідного балу лишається всього ${fmt(e.margin)} бала. Кілька нових заяв можуть змінити картину.`,
+    text: (e) => e.method === 'actual'
+      ? `Над прохідним балом лише ${fmt(e.margin)} бала — місце було б, але без жодного запасу.`
+      : `До прохідного балу лишається всього ${fmt(e.margin)} бала. Кілька нових заяв можуть змінити картину.`,
   },
   'budget-tie': {
     cls: 'v-warn', icon: '⚖️', title: 'Рівно на межі',
@@ -495,7 +518,9 @@ const VERDICTS = {
   },
   'budget-close': {
     cls: 'v-warn', icon: '📉', title: 'Трохи не вистачає на бюджет',
-    text: (e) => `Бракує ${fmt(e.scoreGap)} бала до прогнозованого прохідного. Різниця невелика — усе ще можливо, якщо хтось забере документи.`,
+    text: (e) => e.method === 'actual'
+      ? `Бракує ${fmt(e.scoreGap)} бала до прохідного. Різниця невелика, але місця вже розподілені.`
+      : `Бракує ${fmt(e.scoreGap)} бала до прогнозованого прохідного. Різниця невелика — усе ще можливо, якщо хтось забере документи.`,
   },
   'contract': {
     cls: 'v-info', icon: 'ℹ️', title: 'Бюджет малоймовірний, контракт — так',
@@ -612,7 +637,7 @@ const searchPerson = debounce(async (q) => {
 }, 300);
 
 function simBadge(p) {
-  if (p.status && p.status !== 'Допущено') return el('span', 'badge b-bad', p.status);
+  if (p.status && !isActiveStatus(p.status)) return el('span', 'badge b-bad', p.status);
   const here = p.simulationHere || (p.goesTo?.staysHere ? p.goesTo : null);
   if (here) {
     return here.type === 'budget'
@@ -630,8 +655,8 @@ function filteredRows() {
   const q = $('#table-search').value.trim().toLowerCase();
   return DATA.rows.filter((r) => {
     if (q && !(r.name || '').toLowerCase().includes(q)) return false;
-    if (tableFilter === 'active') return r.status === 'Допущено';
-    if (tableFilter === 'budget') return r.basis === 'Б' && r.status === 'Допущено';
+    if (tableFilter === 'active') return isActiveStatus(r.status);
+    if (tableFilter === 'budget') return r.basis === 'Б' && isActiveStatus(r.status);
     if (tableFilter === 'stays') return r.goesTo?.staysHere;
     if (tableFilter === 'quota') return Boolean(r.quota);
     return true;
@@ -652,7 +677,7 @@ function renderTable() {
       body.append(myRow());
       myInserted = true;
     }
-    const active = r.status === 'Допущено';
+    const active = isActiveStatus(r.status);
     const tr = el('tr', [r.goesTo?.staysHere ? 'stays' : '', active ? '' : 'inactive'].filter(Boolean).join(' '));
     tr.append(
       el('td', 'num', String(r.position ?? '')),

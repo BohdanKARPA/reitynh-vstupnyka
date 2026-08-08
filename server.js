@@ -65,6 +65,17 @@ function toPayload(data) {
     if (r.name) winnerPosition.set(r.name, r.position);
   }
 
+  // Коли симуляції немає (минулі роки або кампанія вже дійшла до рекомендацій),
+  // те саме беремо зі статусів: вони кажуть, хто справді проходить.
+  if (sim.source === 'actual') {
+    sim.budget.forEach((r, i) => {
+      simByPosition.set(r.position, { type: 'budget', staysHere: true, position: i + 1 });
+    });
+    sim.contract.forEach((r, i) => {
+      simByPosition.set(r.position, { type: 'contract', staysHere: true, position: i + 1 });
+    });
+  }
+
   const people = R.competitors(data.rows || []);
 
   return {
@@ -110,16 +121,18 @@ function toPayload(data) {
         status: r.status,
         quota: r.quota,
         components: r.components,
-        // Куди людину «відправляє» симуляція сайту.
-        goesTo: r.simulation
+        // Куди людину «відправляє» симуляція — або де вона опинилась насправді.
+        goesTo: r.simulation || winning
           ? {
               type: winning ? winning.type : r.simulation.type,
               staysHere: Boolean(winning),
               position: winning ? winning.position : r.simulation.position,
-              university: r.simulation.university,
-              specialty: r.simulation.specialty,
-              specialtyCode: r.simulation.specialtyCode,
-              url: r.simulation.url,
+              // Куди людина пішла, знає лише симуляція; за фактичними
+              // статусами цих полів немає.
+              university: r.simulation?.university ?? null,
+              specialty: r.simulation?.specialty ?? null,
+              specialtyCode: r.simulation?.specialtyCode ?? null,
+              url: r.simulation?.url ?? null,
             }
           : null,
         // Одна людина подає кілька заяв на той самий напрям. Місце дає лише одна
