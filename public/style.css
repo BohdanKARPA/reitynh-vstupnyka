@@ -247,6 +247,7 @@ table.rating tr.inactive td:nth-child(2) { text-decoration: line-through; }
 .priority-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .priority-table td.num { font-variant-numeric: tabular-nums; }
 .priority-table tr.p-leaves { background: color-mix(in srgb, var(--good) 8%, transparent); }
+.priority-table tr.p-likely { background: color-mix(in srgb, var(--good) 4%, transparent); }
 .priority-table tr.p-unknown { background: color-mix(in srgb, var(--warn) 8%, transparent); }
 .p-tag {
   display: inline-block; padding: 1px 7px; border-radius: 99px;
@@ -254,6 +255,7 @@ table.rating tr.inactive td:nth-child(2) { text-decoration: line-through; }
 }
 .p-tag-go { background: var(--good-soft); color: var(--good); }
 .p-tag-stay { background: var(--line); color: var(--ink-soft); }
+.p-tag-maybe { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
 .p-tag-q { background: var(--warn-soft); color: var(--warn); }
 .p-where { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
 

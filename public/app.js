@@ -906,11 +906,16 @@ function renderPriority(r) {
 
   const sum = el('div', 'priority-summary');
   const freed = r.positionBefore - r.positionAfter;
-  sum.append(el('div', 'priority-big', `${r.positionBefore} → ${r.positionAfter}`));
-  sum.append(el('div', 'priority-cap',
-    freed > 0
-      ? `${freed} ${plural(freed, 'людина піде', 'людини підуть', 'людей підуть')} на вищий пріоритет`
-      : 'ніхто з перевірених не йде на вищий пріоритет'));
+  const likely = r.positionAfter - (r.positionLikely ?? r.positionAfter);
+
+  // Показуємо два числа: точне і з урахуванням ймовірних.
+  const target = likely > 0 ? r.positionLikely : r.positionAfter;
+  sum.append(el('div', 'priority-big', `${r.positionBefore} → ${target}`));
+
+  const parts = [];
+  if (freed) parts.push(`${freed} точно ${plural(freed, 'йде', 'йдуть', 'йдуть')} вище`);
+  if (likely) parts.push(`ще ${likely} ${plural(likely, 'ймовірно піде', 'ймовірно підуть', 'ймовірно підуть')}`);
+  sum.append(el('div', 'priority-cap', parts.length ? parts.join(', ') : 'ніхто з перевірених не йде вище'));
   box.append(sum);
 
   const note = el('p', 'priority-note');
@@ -919,7 +924,12 @@ function renderPriority(r) {
     // місце не гірше за показане, і від перевірки решти може лише покращитись.
     (r.notChecked
       ? ` Решту (${r.notChecked}) не перевіряв, щоб не навантажувати сайт, — справжнє місце може бути ще кращим.`
-      : ' Це повний перелік — місце остаточне.') +
+      : ' Це всі, хто попереду.') +
+    // «Ймовірно» — там, де рекомендацій ще немає і ми судимо за позицією
+    // людини у списку її вищого пріоритету.
+    (r.likelyLeaving
+      ? ' Частина висновків оцінкова: рекомендацій ще немає, тож дивимось, чи вміщається людина в бюджетні місця за вищим пріоритетом.'
+      : '') +
     (r.unknown ? ` Для ${r.unknown} результат ще невідомий.` : '');
   box.append(note);
 
@@ -930,26 +940,27 @@ function renderPriority(r) {
   thead.append(head);
   table.append(thead);
 
+  const LOOK = {
+    'leaves':        { row: 'p-leaves', tag: 'p-tag-go',    label: 'піде' },
+    'likely-leaves': { row: 'p-likely', tag: 'p-tag-maybe', label: 'ймовірно піде' },
+    'stays':         { row: '',         tag: 'p-tag-stay',  label: 'лишається' },
+    'likely-stays':  { row: '',         tag: 'p-tag-stay',  label: 'радше лишається' },
+    'unknown':       { row: 'p-unknown', tag: 'p-tag-q',    label: '?' },
+  };
+
   const body = el('tbody');
   for (const d of r.details) {
-    const tr = el('tr', d.outcome === 'leaves' ? 'p-leaves' : d.outcome === 'unknown' ? 'p-unknown' : '');
+    const look = LOOK[d.outcome] || LOOK.unknown;
+    const tr = el('tr', look.row);
     tr.append(el('td', null, String(d.position ?? '—')));
     tr.append(el('td', null, d.name));
     tr.append(el('td', 'num', fmt(d.score)));
     tr.append(el('td', null, String(d.priority ?? '—')));
 
     const what = el('td');
-    if (d.outcome === 'leaves') {
-      what.append(el('span', 'p-tag p-tag-go', 'піде'));
-      what.append(document.createTextNode(` ${d.reason}`));
-      if (d.where) what.append(el('div', 'p-where', d.where));
-    } else if (d.outcome === 'unknown') {
-      what.append(el('span', 'p-tag p-tag-q', '?'));
-      what.append(document.createTextNode(` ${d.reason}`));
-    } else {
-      what.append(el('span', 'p-tag p-tag-stay', 'лишається'));
-      what.append(document.createTextNode(` ${d.reason}`));
-    }
+    what.append(el('span', `p-tag ${look.tag}`, look.label));
+    what.append(document.createTextNode(` ${d.reason}`));
+    if (d.where) what.append(el('div', 'p-where', d.where));
     tr.append(what);
     body.append(tr);
   }
