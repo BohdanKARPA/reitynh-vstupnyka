@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Рейтинг вступника 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🎓</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="brand-mark">🎓</span> Рейтинг вступника</div>
+    <form class="id-form" id="id-form">
+      <select id="year-select" class="year-select" title="Рік вступної кампанії"></select>
+      <input type="text" id="id-input" placeholder="ID напряму або посилання" spellcheck="false">
+      <button type="submit" class="btn btn-primary">Відкрити</button>
+      <button type="button" class="btn btn-ghost" id="refresh-btn" title="Перезавантажити дані з сайту">↻</button>
+    </form>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+
+  <div id="loader" class="loader">
+    <div class="spinner"></div>
+    <p id="loader-text">Завантажую рейтинг із abit-poisk.org.ua…</p>
+    <p class="loader-hint">Перший запуск триває ~10 секунд: підтягуються всі сторінки списку.</p>
+  </div>
+
+  <div id="error" class="error hidden"></div>
+
+  <div id="content" class="hidden">
+
+    <!-- Збережені спеціальності -->
+    <section class="card saved-card hidden" id="saved-card">
+      <h2 class="card-title">Мої спеціальності</h2>
+      <div class="saved-list" id="saved-list"></div>
+    </section>
+
+    <!-- Вибір спеціальності -->
+    <section class="card picker-card">
+      <button class="picker-toggle" id="picker-toggle">
+        <span>🔎 Обрати іншу спеціальність</span>
+        <span class="picker-arrow">▾</span>
+      </button>
+      <div class="picker hidden" id="picker">
+        <div class="picker-grid">
+          <label class="field">
+            <span class="field-label">Рівень</span>
+            <select id="pick-level">
+              <option value="Бакалавр">Бакалавр</option>
+              <option value="Магістр">Магістр</option>
+              <option value="">Усі рівні</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Область</span>
+            <select id="pick-region"><option value="">—</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Заклад освіти</span>
+            <select id="pick-univer"><option value="">спочатку обери область</option></select>
+          </label>
+        </div>
+        <input type="text" id="pick-filter" class="pick-filter hidden" placeholder="Фільтр за назвою спеціальності…" spellcheck="false">
+        <div id="pick-list" class="pick-list"></div>
+      </div>
+    </section>
+
+    <!-- Шапка напряму -->
+    <section class="card head-card">
+      <div class="head-main">
+        <h1 id="specialty">—</h1>
+        <p class="subtle" id="subtitle">—</p>
+      </div>
+      <div class="head-actions">
+        <button id="save-btn" class="save-btn" title="Зберегти цю спеціальність">☆ Зберегти</button>
+        <a id="source-link" class="source-link" target="_blank" rel="noopener">Джерело ↗</a>
+      </div>
+    </section>
+
+    <!-- Ключові цифри -->
+    <section class="stats" id="stats"></section>
+
+    <div id="notice"></div>
+
+    <!-- Калькулятор -->
+    <section class="card">
+      <h2 class="card-title">Мій прогноз</h2>
+
+      <div class="tabs" id="calc-tabs">
+        <button class="tab active" data-mode="score">Знаю конкурсний бал</button>
+        <button class="tab" data-mode="subjects">Порахувати з балів НМТ</button>
+      </div>
+
+      <!-- режим: готовий бал -->
+      <div class="pane" id="pane-score">
+        <label class="field">
+          <span class="field-label">Конкурсний бал</span>
+          <input type="number" id="score-input" step="0.001" min="100" max="200" placeholder="напр. 165.5">
+        </label>
+      </div>
+
+      <!-- режим: бали предметів -->
+      <div class="pane hidden" id="pane-subjects">
+        <div id="subject-inputs" class="subject-grid"></div>
+        <div class="computed" id="computed-score">
+          Конкурсний бал: <strong>—</strong>
+          <span class="subtle formula">Σ(бал × коефіцієнт) ÷ Σ(коефіцієнтів)</span>
+        </div>
+      </div>
+
+      <label class="field field-inline">
+        <span class="field-label">Квота</span>
+        <select id="quota-select">
+          <option value="">Без квоти (загальний конкурс)</option>
+          <option value="Квота-1">Квота-1</option>
+          <option value="Квота-2">Квота-2</option>
+        </select>
+      </label>
+
+      <div id="result" class="result hidden"></div>
+    </section>
+
+    <!-- Пошук людини -->
+    <section class="card">
+      <h2 class="card-title">Знайти людину в списку</h2>
+      <label class="field">
+        <span class="field-label">Прізвище або номер заяви</span>
+        <input type="text" id="person-input" placeholder="напр. Палєй" spellcheck="false">
+      </label>
+      <div id="person-results"></div>
+    </section>
+
+    <!-- Повний рейтинг -->
+    <section class="card">
+      <h2 class="card-title">Повний рейтинг <span class="subtle" id="table-count"></span></h2>
+      <div class="filters">
+        <input type="text" id="table-search" placeholder="Пошук за прізвищем…" spellcheck="false">
+        <div class="chips" id="table-filters">
+          <button class="chip active" data-filter="all">Усі заяви</button>
+          <button class="chip" data-filter="active">Тільки активні</button>
+          <button class="chip" data-filter="budget">Заяви на бюджет</button>
+          <button class="chip" data-filter="stays">Проходять сюди</button>
+          <button class="chip" data-filter="quota">Квотники</button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="rating">
+          <thead>
+            <tr>
+              <th>№</th><th>ПІБ</th><th>Бал</th><th>Пр.</th><th>Квота</th><th>Прогноз</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost more-btn hidden" id="more-btn">Показати ще</button>
+    </section>
+
+    <footer class="foot">
+      <p>Оновлено: <span id="fetched-at">—</span> · дані з <a href="https://abit-poisk.org.ua" target="_blank" rel="noopener">abit-poisk.org.ua</a></p>
+      <p class="subtle">
+        Прогноз розрахунковий. Реальний вступ — це широкий конкурс по всіх твоїх заявах одразу,
+        тому результат на одному напрямі залежить ще й від того, як розподіляться люди на інших
+        спеціальностях. Це <strong>не</strong> офіційна рекомендація ЄДЕБО.
+      </p>
+    </footer>
+
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

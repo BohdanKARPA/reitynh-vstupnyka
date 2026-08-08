@@ -1,0 +1,13 @@
+# Налаштування для Render — сервіс підхопить його сам.
+services:
+  - type: web
+    name: reitynh-vstupnyka
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/years
+    envVars:
+      # На безкоштовному тарифі диск тимчасовий — кеш просто відновиться.
+      - key: NODE_VERSION
+        value: "22"

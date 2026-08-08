@@ -1,0 +1,338 @@
+:root {
+  --bg: #f4f6fa;
+  --card: #ffffff;
+  --ink: #12151c;
+  --ink-soft: #5b6478;
+  --line: #e3e8f0;
+  --accent: #2f6df6;
+  --accent-soft: #e8f0ff;
+  --good: #10893e;
+  --good-soft: #e6f6ec;
+  --warn: #b06a00;
+  --warn-soft: #fef3e0;
+  --bad: #c62c3c;
+  --bad-soft: #fdeaec;
+  --info: #0b6b8f;
+  --info-soft: #e3f3fa;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px rgba(16, 24, 40, .06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1017;
+    --card: #151a23;
+    --ink: #e8ecf4;
+    --ink-soft: #939db3;
+    --line: #262d3a;
+    --accent: #5b8dff;
+    --accent-soft: #1a2540;
+    --good: #4ade80;
+    --good-soft: #14301f;
+    --warn: #fbbf50;
+    --warn-soft: #33270f;
+    --bad: #f87171;
+    --bad-soft: #351a1e;
+    --info: #5ec2e8;
+    --info-soft: #102c38;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+.hidden { display: none !important; }
+.subtle { color: var(--ink-soft); font-weight: 400; }
+
+/* ---------- Верхня панель ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap;
+}
+.brand { font-weight: 650; font-size: 16px; letter-spacing: -.01em; }
+.brand-mark { margin-right: 4px; }
+.year { color: var(--ink-soft); font-weight: 500; }
+.id-form { display: flex; gap: 8px; }
+.year-select {
+  padding: 8px 10px; font-size: 14px; font-family: inherit; font-weight: 600;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.id-form input {
+  width: 230px; padding: 8px 12px; font-size: 14px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--bg); color: var(--ink);
+}
+
+/* ---------- Кнопки ---------- */
+.btn {
+  padding: 8px 14px; font-size: 14px; font-weight: 550; font-family: inherit;
+  border-radius: 9px; border: 1px solid transparent; cursor: pointer;
+  transition: filter .15s, background .15s;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--ink-soft); }
+.btn-ghost:hover { background: var(--bg); color: var(--ink); }
+
+/* ---------- Картки ---------- */
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 22px; margin: 18px 0;
+}
+.card-title { margin: 0 0 16px; font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+
+.head-card { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-top: 24px; }
+.head-main h1 { margin: 0 0 4px; font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.program-tag {
+  display: block; margin-top: 5px; font-size: 15px; font-weight: 600;
+  color: var(--accent); letter-spacing: 0;
+}
+.head-main p { margin: 0; font-size: 14px; }
+.source-link { color: var(--accent); text-decoration: none; font-size: 14px; white-space: nowrap; }
+.source-link:hover { text-decoration: underline; }
+
+/* ---------- Смуга статистики ---------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 18px 0; }
+.stat {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px;
+}
+.stat-value { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.stat-label { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+.stat.highlight { background: var(--accent-soft); border-color: transparent; }
+.stat.highlight .stat-value { color: var(--accent); }
+
+/* ---------- Вкладки та поля ---------- */
+.tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 18px; width: fit-content; }
+.tab {
+  padding: 7px 14px; font-size: 14px; font-family: inherit; font-weight: 550;
+  border: none; background: transparent; color: var(--ink-soft);
+  border-radius: 7px; cursor: pointer;
+}
+.tab.active { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+.field { display: block; margin-bottom: 14px; }
+.field-label { display: block; font-size: 13px; font-weight: 550; color: var(--ink-soft); margin-bottom: 5px; }
+.field input, .field select {
+  width: 100%; max-width: 320px; padding: 10px 13px; font-size: 15px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.field-inline { max-width: 320px; }
+
+.subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.subject { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.subject-name { font-size: 13.5px; font-weight: 550; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.subject-k { font-size: 12px; color: var(--ink-soft); font-weight: 500; white-space: nowrap; }
+.subject input, .subject select {
+  width: 100%; margin-top: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink);
+}
+.subject.below-min input { border-color: var(--bad); }
+.subject-warn { font-size: 12px; color: var(--bad); margin-top: 6px; }
+
+.computed { margin-top: 16px; padding: 14px 16px; background: var(--accent-soft); border-radius: 10px; font-size: 15px; }
+.computed strong { font-size: 20px; font-weight: 700; color: var(--accent); }
+.formula { display: block; font-size: 12px; margin-top: 3px; }
+
+/* ---------- Результат ---------- */
+.result { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 20px; }
+.verdict { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 12px; margin-bottom: 18px; }
+.verdict-icon { font-size: 26px; line-height: 1.1; }
+.verdict-title { font-size: 17px; font-weight: 650; margin: 0 0 3px; }
+.verdict-text { font-size: 14px; margin: 0; opacity: .92; }
+.v-good { background: var(--good-soft); color: var(--good); }
+.v-warn { background: var(--warn-soft); color: var(--warn); }
+.v-bad  { background: var(--bad-soft);  color: var(--bad); }
+.v-info { background: var(--info-soft); color: var(--info); }
+.verdict .verdict-text { color: var(--ink); }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.metric { background: var(--bg); border-radius: 10px; padding: 13px 15px; }
+.metric-value { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+.metric-label { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+
+.bar-block { margin-bottom: 18px; }
+.bar-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; }
+.bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+.bar-fill.over { background: var(--bad); }
+
+.neighbours { font-size: 14px; }
+.neighbours h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.nb-row { display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 8px; gap: 12px; }
+.nb-row.me { background: var(--accent-soft); font-weight: 650; color: var(--accent); }
+.nb-row span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- Знайдені люди ---------- */
+.person {
+  border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 12px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+}
+.person-name { font-weight: 650; font-size: 15.5px; }
+.person-meta { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.b-good { background: var(--good-soft); color: var(--good); }
+.b-warn { background: var(--warn-soft); color: var(--warn); }
+.b-bad  { background: var(--bad-soft);  color: var(--bad); }
+.b-info { background: var(--info-soft); color: var(--info); }
+.b-plain{ background: var(--bg); color: var(--ink-soft); }
+
+/* ---------- Таблиця ---------- */
+.filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.filters input {
+  flex: 1; min-width: 200px; padding: 9px 13px; font-size: 14px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+}
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 7px 13px; font-size: 13px; font-family: inherit; font-weight: 550;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-soft);
+  border-radius: 99px; cursor: pointer;
+}
+.chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table.rating { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.rating th {
+  text-align: left; padding: 10px 12px; font-size: 12.5px; font-weight: 600;
+  color: var(--ink-soft); background: var(--bg); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0;
+}
+table.rating td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.rating tr:last-child td { border-bottom: none; }
+table.rating tr.stays { background: color-mix(in srgb, var(--good-soft) 55%, transparent); }
+table.rating tr.me { background: var(--accent-soft); font-weight: 650; }
+table.rating tr.inactive { opacity: .45; }
+table.rating tr.inactive td:nth-child(2) { text-decoration: line-through; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.goes { font-size: 12.5px; color: var(--ink-soft); }
+.goes.dup { font-style: italic; opacity: .7; }
+.goes a { color: var(--accent); text-decoration: none; }
+.goes a:hover { text-decoration: underline; }
+.more-btn { display: block; margin: 14px auto 0; }
+
+/* ---------- Збережені спеціальності ---------- */
+.saved-card { margin-top: 24px; }
+.saved-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.saved-chip {
+  display: flex; align-items: stretch; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 11px; background: var(--bg);
+}
+.saved-chip.current { border-color: var(--accent); background: var(--accent-soft); }
+.saved-open {
+  display: block; padding: 9px 13px; text-align: left;
+  background: transparent; border: none; cursor: pointer; font: inherit; color: var(--ink);
+}
+.saved-open:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.saved-chip.current .saved-open { cursor: default; }
+.saved-name { display: block; font-weight: 600; font-size: 14px; }
+.saved-year {
+  display: inline-block; margin-left: 7px; padding: 1px 7px;
+  font-size: 11.5px; font-weight: 600; border-radius: 99px;
+  background: var(--line); color: var(--ink-soft); vertical-align: middle;
+}
+.saved-program { display: block; font-size: 12.5px; color: var(--accent); font-weight: 550; margin-top: 1px; }
+.saved-meta { display: block; font-size: 12px; color: var(--ink-soft); margin-top: 1px; }
+.saved-del {
+  padding: 0 11px; background: transparent; border: none; border-left: 1px solid var(--line);
+  color: var(--ink-soft); cursor: pointer; font-size: 13px;
+}
+.saved-del:hover { background: var(--bad-soft); color: var(--bad); }
+
+.head-actions { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+.save-btn {
+  padding: 7px 13px; font: inherit; font-size: 13.5px; font-weight: 550;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: var(--card); color: var(--ink-soft); cursor: pointer;
+}
+.save-btn:hover { border-color: var(--accent); color: var(--accent); }
+.save-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Вибір спеціальності ---------- */
+.picker-card { padding: 0; overflow: hidden; margin-top: 24px; }
+.picker-toggle {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 22px; background: transparent; border: none; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--ink); text-align: left;
+}
+.picker-toggle:hover { background: var(--bg); }
+.picker-arrow { color: var(--ink-soft); transition: transform .2s; }
+.picker-toggle.open .picker-arrow { transform: rotate(180deg); }
+.picker { padding: 4px 22px 20px; border-top: 1px solid var(--line); }
+.picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 16px; }
+.picker-grid .field { margin-bottom: 0; }
+.picker-grid .field select { max-width: none; }
+.pick-filter {
+  width: 100%; margin-top: 14px; padding: 9px 13px; font-size: 14px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+}
+.pick-list { margin-top: 12px; max-height: 340px; overflow-y: auto; }
+.pick-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  width: 100%; padding: 11px 14px; margin-bottom: 6px; text-align: left;
+  background: var(--bg); border: 1px solid transparent; border-radius: 10px;
+  font: inherit; color: var(--ink); cursor: pointer;
+}
+.pick-item:hover { border-color: var(--accent); }
+.pick-item.current { background: var(--accent-soft); border-color: var(--accent); }
+.pick-name { font-weight: 550; font-size: 14.5px; }
+.pick-program { font-size: 13px; color: var(--accent); font-weight: 550; margin-top: 2px; }
+.pick-meta { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+.pick-count { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; text-align: right; }
+.pick-empty { padding: 14px; color: var(--ink-soft); font-size: 14px; }
+.pick-error {
+  padding: 13px 15px; border-radius: 10px; font-size: 14px;
+  background: var(--bad-soft); color: var(--bad);
+}
+
+/* ---------- Порожній список ---------- */
+.notice {
+  padding: 16px 18px; border-radius: 12px; font-size: 14.5px;
+  background: var(--info-soft); color: var(--ink); margin-bottom: 18px;
+  border-left: 3px solid var(--info);
+}
+.notice strong { color: var(--info); }
+
+/* ---------- Стани ---------- */
+.loader { text-align: center; padding: 70px 20px; }
+.loader p { color: var(--ink-soft); margin: 6px 0 0; }
+.loader-hint { font-size: 13px; opacity: .75; }
+.spinner {
+  width: 30px; height: 30px; margin: 0 auto 16px;
+  border: 3px solid var(--line); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error {
+  margin: 30px 0; padding: 16px 18px; border-radius: 12px;
+  background: var(--bad-soft); color: var(--bad); font-size: 14.5px;
+}
+
+.foot { padding: 10px 4px 50px; font-size: 13px; color: var(--ink-soft); }
+.foot p { margin: 0 0 8px; }
+.foot a { color: var(--accent); }
+
+@media (max-width: 620px) {
+  .head-card { flex-direction: column; }
+  .id-form input { width: 150px; }
+  .card { padding: 18px 16px; }
+}

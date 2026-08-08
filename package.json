@@ -1,0 +1,14 @@
+{
+  "name": "reitynh-vstupnyka",
+  "version": "1.0.0",
+  "description": "Місце в рейтингу на бюджет за даними abit-poisk.org.ua",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
