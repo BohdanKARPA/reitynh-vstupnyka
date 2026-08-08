@@ -173,8 +173,6 @@ function renderAll() {
   $('#fetched-at').textContent = new Date(DATA.fetchedAt).toLocaleString('uk-UA');
   $('#source-link').href = DATA.url;
   recalc();
-  $('#person-input').value = '';
-  $('#person-results').innerHTML = '';
 }
 
 function renderHead() {
@@ -577,80 +575,8 @@ function renderResult(e) {
   }
   box.append(mbox);
 
-  // Смуга: наскільки глибоко в списку бюджетних місць
-  const pct = Math.min(100, (e.budgetRace.position / Math.max(1, e.budgetPlaces)) * 100);
-  const bar = el('div', 'bar-block');
-  const head = el('div', 'bar-head');
-  head.append(el('span', null, '1 місце'), el('span', null, `${e.budgetPlaces} місць`));
-  bar.append(head);
-  const track = el('div', 'bar');
-  const fill = el('div', 'bar-fill' + (e.budgetRace.position > e.budgetPlaces ? ' over' : ''));
-  fill.style.width = `${pct}%`;
-  track.append(fill);
-  bar.append(track);
-  box.append(bar);
-  // Сусідів по списку більше не показуємо: те саме, але корисніше,
-  // видно в таблиці за пріоритетами нижче.
-}
-
-/* ══════════ Пошук людини ══════════ */
-
-const searchPerson = debounce(async (q) => {
-  const box = $('#person-results');
-  if (!q.trim()) { box.innerHTML = ''; return; }
-
-  const res = await fetch(api('/api/search', { id: currentId, q }));
-  const json = await res.json();
-  box.innerHTML = '';
-
-  if (!json.results?.length) {
-    box.append(el('p', 'subtle', 'Нікого не знайдено. Спробуй іншу частину прізвища.'));
-    return;
-  }
-
-  for (const p of json.results) {
-    const row = el('div', 'person');
-    const left = el('div');
-    left.append(el('div', 'person-name', `${p.position}. ${p.name}`));
-    const meta = [
-      `бал ${fmt(p.score)}`,
-      `пріоритет ${p.priority ?? '—'}${p.basis ? ` (${p.basis})` : ''}`,
-      p.quota || null,
-      p.status,
-    ].filter(Boolean).join(' · ');
-    left.append(el('div', 'person-meta', meta));
-
-    // Прогноз стосується конкретної заяви: місце дає лише одна із заяв людини.
-    const sim = p.simulationHere || p.simulation;
-    if (p.simulationHere) {
-      left.append(el('div', 'person-meta',
-        `Прогноз: проходить сюди на ${sim.type === 'budget' ? 'бюджет' : 'контракт'}, місце №${sim.position ?? '—'}`));
-    } else if (p.sameAs) {
-      left.append(el('div', 'person-meta',
-        `Це друга заява тієї самої людини — місце їй дає заява №${p.sameAs}`));
-    } else if (sim) {
-      left.append(el('div', 'person-meta',
-        `Прогноз: піде на ${[sim.specialtyCode, sim.specialty].filter(Boolean).join(' ')}` +
-        `${sim.university ? ` — ${sim.university}` : ''}` +
-        `${sim.type ? ` (${sim.type === 'budget' ? 'бюджет' : 'контракт'})` : ''}`));
-    }
-    row.append(left);
-    row.append(simBadge(p));
-    box.append(row);
-  }
-}, 300);
-
-function simBadge(p) {
-  if (p.status && !isActiveStatus(p.status)) return el('span', 'badge b-bad', p.status);
-  const here = p.simulationHere || (p.goesTo?.staysHere ? p.goesTo : null);
-  if (here) {
-    return here.type === 'budget'
-      ? el('span', 'badge b-good', 'бюджет тут')
-      : el('span', 'badge b-info', 'контракт тут');
-  }
-  if (p.sameAs) return el('span', 'badge b-plain', 'дубль заяви');
-  if (p.simulation || p.goesTo) return el('span', 'badge b-warn', 'піде на інший напрям');
-  return el('span', 'badge b-plain', 'без прогнозу');
+  // Далі йде таблиця за пріоритетами — вона й показує, хто попереду
+  // насправді, тож смуга й список сусідів тут були б повторенням.
 }
 
 /* ══════════ Повна таблиця ══════════ */
@@ -1098,7 +1024,6 @@ $('#quota-select').addEventListener('change', (e) => {
   saveStore();
   recalc();
 });
-$('#person-input').addEventListener('input', (e) => searchPerson(e.target.value));
 $('#table-search').addEventListener('input', debounce(() => { tableLimit = 60; renderTable(); }, 200));
 $('#more-btn').addEventListener('click', () => { tableLimit += 100; renderTable(); });
 

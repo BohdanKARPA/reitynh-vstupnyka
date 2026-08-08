@@ -169,26 +169,6 @@ body {
 .metric-value { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
 .metric-label { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
 
-.bar-block { margin-bottom: 18px; }
-.bar-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; }
-.bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; position: relative; }
-.bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
-.bar-fill.over { background: var(--bad); }
-
-/* ---------- Знайдені люди ---------- */
-.person {
-  border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 12px;
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
-}
-.person-name { font-weight: 650; font-size: 15.5px; }
-.person-meta { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
-.badge { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
-.b-good { background: var(--good-soft); color: var(--good); }
-.b-warn { background: var(--warn-soft); color: var(--warn); }
-.b-bad  { background: var(--bad-soft);  color: var(--bad); }
-.b-info { background: var(--info-soft); color: var(--info); }
-.b-plain{ background: var(--bg); color: var(--ink-soft); }
-
 /* ---------- Таблиця ---------- */
 .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .filters input {
