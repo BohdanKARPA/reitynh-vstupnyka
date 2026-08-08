@@ -589,22 +589,8 @@ function renderResult(e) {
   track.append(fill);
   bar.append(track);
   box.append(bar);
-
-  // Сусіди по списку
-  const nb = el('div', 'neighbours');
-  nb.append(el('h4', null, 'Твоє місце серед конкурентів'));
-  for (const r of e.neighbours.above) nb.append(nbRow(r.name, r.score));
-  const me = el('div', 'nb-row me');
-  me.append(el('span', null, `Ти — ${e.budgetRace.position} місце`), el('span', null, fmt(e.score)));
-  nb.append(me);
-  for (const r of e.neighbours.below) nb.append(nbRow(r.name, r.score));
-  box.append(nb);
-}
-
-function nbRow(name, score) {
-  const n = el('div', 'nb-row');
-  n.append(el('span', null, name || '—'), el('span', null, fmt(score)));
-  return n;
+  // Сусідів по списку більше не показуємо: те саме, але корисніше,
+  // видно в таблиці за пріоритетами нижче.
 }
 
 /* ══════════ Пошук людини ══════════ */

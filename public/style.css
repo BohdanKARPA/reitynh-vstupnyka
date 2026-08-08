@@ -175,12 +175,6 @@ body {
 .bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
 .bar-fill.over { background: var(--bad); }
 
-.neighbours { font-size: 14px; }
-.neighbours h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-.nb-row { display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 8px; gap: 12px; }
-.nb-row.me { background: var(--accent-soft); font-weight: 650; color: var(--accent); }
-.nb-row span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
-
 /* ---------- Знайдені люди ---------- */
 .person {
   border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-top: 12px;
