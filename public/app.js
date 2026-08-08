@@ -492,7 +492,13 @@ const recalc = debounce(async () => {
   if (lastScoreUsed !== score) {
     lastScoreUsed = score;
     $('#priority-result').innerHTML = '';
-    $('#priority-run').textContent = 'Перевірити пріоритети';
+    $('#priority-run').textContent = 'Перевірити';
+
+    // Коли конкурентів небагато, рахуємо одразу — це секунди. Для великих
+    // списків лишаємо кнопку: там це десятки запитів до сайту.
+    const ahead = DATA.rows.filter((r) => r.basis === 'Б' && r.score > score
+      && !/Відмова|Скасовано|Відхилено/i.test(r.status || '')).length;
+    if (ahead > 0 && ahead <= AUTO_PRIORITY_LIMIT) runPriorityCheck();
   }
   $('#priority-box').classList.remove('hidden');
 
@@ -875,6 +881,10 @@ function renderPickList() {
 
 let lastScoreUsed = null;
 
+// До скількох конкурентів перевіряємо без запитання. Магістерські списки
+// зазвичай саме такі, а великі бакалаврські чекають на натискання кнопки.
+const AUTO_PRIORITY_LIMIT = 45;
+
 async function runPriorityCheck() {
   const btn = $('#priority-run');
   const box = $('#priority-result');
@@ -918,19 +928,13 @@ function renderPriority(r) {
   sum.append(el('div', 'priority-cap', parts.length ? parts.join(', ') : 'ніхто з перевірених не йде вище'));
   box.append(sum);
 
-  const note = el('p', 'priority-note');
-  note.textContent = `Перевірено ${r.checked} із ${r.aheadTotal} тих, хто попереду за балом.` +
-    // Кожен неперевірений може виявитись таким, що йде геть, — тож справжнє
-    // місце не гірше за показане, і від перевірки решти може лише покращитись.
-    (r.notChecked
-      ? ` Решту (${r.notChecked}) не перевіряв, щоб не навантажувати сайт, — справжнє місце може бути ще кращим.`
-      : ' Це всі, хто попереду.') +
-    // «Ймовірно» — там, де рекомендацій ще немає і ми судимо за позицією
-    // людини у списку її вищого пріоритету.
-    (r.likelyLeaving
-      ? ' Частина висновків оцінкова: рекомендацій ще немає, тож дивимось, чи вміщається людина в бюджетні місця за вищим пріоритетом.'
-      : '') +
-    (r.unknown ? ` Для ${r.unknown} результат ще невідомий.` : '');
+  // Коротко: перевірено стільки-то, решта — деталі в самій таблиці.
+  const bits = [`перевірено ${r.checked} із ${r.aheadTotal}`];
+  if (r.notChecked) bits.push('решта — може стати ще краще');
+  if (r.likelyLeaving) bits.push('«ймовірно» — оцінка за місцем у вищому пріоритеті');
+  if (r.unknown) bits.push(`${r.unknown} без даних`);
+
+  const note = el('p', 'priority-note', bits.join(' · '));
   box.append(note);
 
   const table = el('table', 'priority-table');
@@ -1077,6 +1081,11 @@ $('#refresh-btn').addEventListener('click', () => load(currentId, true));
 
 $('#save-btn').addEventListener('click', toggleSave);
 $('#priority-run').addEventListener('click', runPriorityCheck);
+
+$('#table-toggle').addEventListener('click', () => {
+  const open = $('#table-collapse').classList.toggle('hidden');
+  $('#table-toggle').querySelector('.caret').textContent = open ? '▸' : '▾';
+});
 
 $('#calc-tabs').addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');

@@ -126,15 +126,8 @@
       <!-- Перерахунок з урахуванням чужих пріоритетів -->
       <div id="priority-box" class="priority-box hidden">
         <div class="priority-head">
-          <div>
-            <strong>Хто попереду насправді</strong>
-            <p class="priority-hint">
-              Частина людей вище за тебе подала сюди другим чи нижчим пріоритетом —
-              якщо вони проходять кудись вище, місце тут звільниться.
-              Перевірка опитує сайт по одній людині, тож триває близько хвилини.
-            </p>
-          </div>
-          <button id="priority-run" class="btn btn-primary">Перевірити пріоритети</button>
+          <strong>Хто попереду насправді</strong>
+          <button id="priority-run" class="btn btn-ghost">Перевірити</button>
         </div>
         <div id="priority-result"></div>
       </div>
@@ -150,9 +143,12 @@
       <div id="person-results"></div>
     </section>
 
-    <!-- Повний рейтинг -->
+    <!-- Повний рейтинг — за замовчуванням згорнутий, головне вище -->
     <section class="card">
-      <h2 class="card-title">Повний рейтинг <span class="subtle" id="table-count"></span></h2>
+      <h2 class="card-title collapsible" id="table-toggle">
+        <span class="caret">▸</span> Повний рейтинг <span class="subtle" id="table-count"></span>
+      </h2>
+      <div id="table-collapse" class="hidden">
       <div class="filters">
         <input type="text" id="table-search" placeholder="Пошук за прізвищем…" spellcheck="false">
         <div class="chips" id="table-filters">
@@ -174,6 +170,7 @@
         </table>
       </div>
       <button class="btn btn-ghost more-btn hidden" id="more-btn">Показати ще</button>
+      </div>
     </section>
 
     <footer class="foot">
