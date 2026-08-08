@@ -888,7 +888,10 @@ function renderPriority(r) {
     const what = el('td');
     what.append(el('span', `p-tag ${look.tag}`, look.label));
     what.append(document.createTextNode(` ${d.reason}`));
-    if (d.where) what.append(el('div', 'p-where', d.where));
+    // Куди саме він іде — і який там прохідний, якщо той список ми підняли.
+    const where = [d.where, d.cutoff != null ? `прохідний там ${fmt(d.cutoff)}` : null]
+      .filter(Boolean).join(' · ');
+    if (where) what.append(el('div', 'p-where', where));
     tr.append(what);
     body.append(tr);
   }
