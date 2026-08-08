@@ -482,7 +482,19 @@ const recalc = debounce(async () => {
   renderTable();
 
   // Без опублікованих заяв рахувати місце нема з чого — показуємо лише бал.
-  if (score == null || !DATA.rows.length) { $('#result').classList.add('hidden'); return; }
+  if (score == null || !DATA.rows.length) {
+    $('#result').classList.add('hidden');
+    $('#priority-box').classList.add('hidden');
+    return;
+  }
+
+  // Перевірка пріоритетів має сенс лише коли є з ким порівнюватись.
+  if (lastScoreUsed !== score) {
+    lastScoreUsed = score;
+    $('#priority-result').innerHTML = '';
+    $('#priority-run').textContent = 'Перевірити пріоритети';
+  }
+  $('#priority-box').classList.remove('hidden');
 
   const quota = $('#quota-select').value;
   const res = await fetch(api('/api/evaluate', { id: currentId, score, quota }));
@@ -859,6 +871,88 @@ function renderPickList() {
   }
 }
 
+/* ══════════ Хто попереду насправді (перерахунок за пріоритетами) ══════════ */
+
+let lastScoreUsed = null;
+
+async function runPriorityCheck() {
+  const btn = $('#priority-run');
+  const box = $('#priority-result');
+  if (lastScoreUsed == null) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Перевіряю…';
+  box.innerHTML = '<p class="pick-empty">Опитую сайт по одній людині. Це може зайняти хвилину…</p>';
+
+  try {
+    const res = await fetch(api('/api/priority', { id: currentId, score: lastScoreUsed }));
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'Помилка перевірки');
+    renderPriority(j);
+  } catch (err) {
+    box.innerHTML = '';
+    const e = el('div', 'pick-error');
+    e.append(el('strong', null, 'Не вдалося перевірити. '), document.createTextNode(err.message));
+    box.append(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Перевірити ще раз';
+  }
+}
+
+function renderPriority(r) {
+  const box = $('#priority-result');
+  box.innerHTML = '';
+
+  const sum = el('div', 'priority-summary');
+  const freed = r.positionBefore - r.positionAfter;
+  sum.append(el('div', 'priority-big', `${r.positionBefore} → ${r.positionAfter}`));
+  sum.append(el('div', 'priority-cap',
+    freed > 0
+      ? `${freed} ${plural(freed, 'людина піде', 'людини підуть', 'людей підуть')} на вищий пріоритет`
+      : 'ніхто з перевірених не йде на вищий пріоритет'));
+  box.append(sum);
+
+  const note = el('p', 'priority-note');
+  note.textContent = `Перевірено ${r.checked} із ${r.aheadTotal} тих, хто попереду за балом.` +
+    (r.notChecked ? ` Решту (${r.notChecked}) не перевіряв, щоб не навантажувати сайт.` : '') +
+    (r.unknown ? ` Для ${r.unknown} результат ще невідомий.` : '');
+  box.append(note);
+
+  const table = el('table', 'priority-table');
+  const head = el('tr');
+  for (const h of ['№', 'Абітурієнт', 'Бал', 'Пр.', 'Що з ним']) head.append(el('th', null, h));
+  const thead = el('thead');
+  thead.append(head);
+  table.append(thead);
+
+  const body = el('tbody');
+  for (const d of r.details) {
+    const tr = el('tr', d.outcome === 'leaves' ? 'p-leaves' : d.outcome === 'unknown' ? 'p-unknown' : '');
+    tr.append(el('td', null, String(d.position ?? '—')));
+    tr.append(el('td', null, d.name));
+    tr.append(el('td', 'num', fmt(d.score)));
+    tr.append(el('td', null, String(d.priority ?? '—')));
+
+    const what = el('td');
+    if (d.outcome === 'leaves') {
+      what.append(el('span', 'p-tag p-tag-go', 'піде'));
+      what.append(document.createTextNode(` ${d.reason}`));
+      if (d.where) what.append(el('div', 'p-where', d.where));
+    } else if (d.outcome === 'unknown') {
+      what.append(el('span', 'p-tag p-tag-q', '?'));
+      what.append(document.createTextNode(` ${d.reason}`));
+    } else {
+      what.append(el('span', 'p-tag p-tag-stay', 'лишається'));
+      what.append(document.createTextNode(` ${d.reason}`));
+    }
+    tr.append(what);
+    body.append(tr);
+  }
+  table.append(body);
+  box.append(table);
+}
+
 /* ══════════ Рік вступної кампанії ══════════ */
 
 async function initYears() {
@@ -967,6 +1061,7 @@ $('#id-form').addEventListener('submit', (e) => {
 $('#refresh-btn').addEventListener('click', () => load(currentId, true));
 
 $('#save-btn').addEventListener('click', toggleSave);
+$('#priority-run').addEventListener('click', runPriorityCheck);
 
 $('#calc-tabs').addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');

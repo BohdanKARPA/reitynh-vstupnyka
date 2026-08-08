@@ -15,6 +15,7 @@ const {
   DEFAULT_YEAR, YEARS,
 } = require('./lib/fetcher.js');
 const R = require('./lib/rank.js');
+const Priority = require('./lib/priority.js');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -190,6 +191,20 @@ const server = http.createServer(async (req, res) => {
     }
 
     // --- Каталог: області → виші → спеціальності ---
+    if (url.pathname === '/api/priority') {
+      const id = (url.searchParams.get('id') || '').replace(/\D/g, '');
+      const score = parseFloat(url.searchParams.get('score'));
+      if (!id) return sendJson(res, 400, { error: 'Не вказано ID напряму.' });
+      if (!Number.isFinite(score)) return sendJson(res, 400, { error: 'Некоректний конкурсний бал.' });
+
+      // Кожна перевірка — окремий пошук на сайті, тож обмежуємо зверху.
+      const asked = parseInt(url.searchParams.get('limit'), 10);
+      const limit = Math.min(Number.isFinite(asked) ? asked : 60, 150);
+
+      const data = await fetchDirection(id, { year: yearOf(url) });
+      return sendJson(res, 200, await Priority.simulate(data, score, { limit }));
+    }
+
     if (url.pathname === '/api/regions') {
       return sendJson(res, 200, await fetchRegions(yearOf(url)));
     }

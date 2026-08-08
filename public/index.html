@@ -122,6 +122,22 @@
       </label>
 
       <div id="result" class="result hidden"></div>
+
+      <!-- Перерахунок з урахуванням чужих пріоритетів -->
+      <div id="priority-box" class="priority-box hidden">
+        <div class="priority-head">
+          <div>
+            <strong>Хто попереду насправді</strong>
+            <p class="priority-hint">
+              Частина людей вище за тебе подала сюди другим чи нижчим пріоритетом —
+              якщо вони проходять кудись вище, місце тут звільниться.
+              Перевірка опитує сайт по одній людині, тож триває близько хвилини.
+            </p>
+          </div>
+          <button id="priority-run" class="btn btn-primary">Перевірити пріоритети</button>
+        </div>
+        <div id="priority-result"></div>
+      </div>
     </section>
 
     <!-- Пошук людини -->
