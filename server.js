@@ -16,6 +16,7 @@ const {
 } = require('./lib/fetcher.js');
 const R = require('./lib/rank.js');
 const Priority = require('./lib/priority.js');
+const Forecast = require('./lib/forecast.js');
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -203,6 +204,19 @@ const server = http.createServer(async (req, res) => {
 
       const data = await fetchDirection(id, { year: yearOf(url) });
       return sendJson(res, 200, await Priority.simulate(data, score, { limit }));
+    }
+
+    // --- Повний розклад: хто куди потрапляє ---
+    if (url.pathname === '/api/forecast') {
+      const id = (url.searchParams.get('id') || DEFAULT_ID).replace(/\D/g, '');
+      if (!id) return sendJson(res, 400, { error: 'Не вказано ID напряму.' });
+
+      // Кожен неопитаний — окремий пошук на сайті з паузою, тож стеля жорстка.
+      const asked = parseInt(url.searchParams.get('limit'), 10);
+      const limit = Math.min(Number.isFinite(asked) ? asked : 100, 200);
+
+      const data = await fetchDirection(id, { year: yearOf(url) });
+      return sendJson(res, 200, await Forecast.forecast(data, { limit }));
     }
 
     if (url.pathname === '/api/regions') {

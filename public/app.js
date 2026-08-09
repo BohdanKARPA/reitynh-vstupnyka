@@ -170,6 +170,9 @@ function renderAll() {
   restoreInputs();
   renderSaved();
   renderTable();
+  // Розклад рахувався для попереднього напряму — до нового він не стосується.
+  $('#forecast-result').innerHTML = '';
+  $('#forecast-run').textContent = 'Порахувати розклад';
   $('#fetched-at').textContent = new Date(DATA.fetchedAt).toLocaleString('uk-UA');
   $('#source-link').href = DATA.url;
   recalc();
@@ -848,6 +851,7 @@ function renderPriority(r) {
   const parts = [];
   if (freed) parts.push(`${freed} точно ${plural(freed, 'йде', 'йдуть', 'йдуть')} вище`);
   if (likely) parts.push(`ще ${likely} ${plural(likely, 'ймовірно піде', 'ймовірно підуть', 'ймовірно підуть')}`);
+  if (r.maybeLeaving) parts.push(`ще ${r.maybeLeaving} — якщо вище звільняться місця`);
   sum.append(el('div', 'priority-cap', parts.length ? parts.join(', ') : 'ніхто з перевірених не йде вище'));
   box.append(sum);
 
@@ -870,6 +874,7 @@ function renderPriority(r) {
   const LOOK = {
     'leaves':        { row: 'p-leaves', tag: 'p-tag-go',    label: 'піде' },
     'likely-leaves': { row: 'p-likely', tag: 'p-tag-maybe', label: 'ймовірно піде' },
+    'maybe-leaves':  { row: 'p-likely', tag: 'p-tag-maybe', label: 'може піти' },
     'stays':         { row: '',         tag: 'p-tag-stay',  label: 'лишається' },
     'likely-stays':  { row: '',         tag: 'p-tag-stay',  label: 'радше лишається' },
     'unknown':       { row: 'p-unknown', tag: 'p-tag-q',    label: '?' },
@@ -897,6 +902,124 @@ function renderPriority(r) {
   }
   table.append(body);
   box.append(table);
+}
+
+/* ══════════ Розклад: хто куди потрапить ══════════ */
+
+const FATE = {
+  'leaves':        { tag: 'p-tag-go',    label: 'піде' },
+  'likely-leaves': { tag: 'p-tag-go',    label: 'піде' },
+  'maybe-leaves':  { tag: 'p-tag-maybe', label: 'може піти' },
+  'stays':         { tag: 'p-tag-stay',  label: 'лишається' },
+  'likely-stays':  { tag: 'p-tag-stay',  label: 'лишається' },
+  'unchecked':     { tag: 'p-tag-q',     label: 'не перевіряли' },
+  'unknown':       { tag: 'p-tag-q',     label: '?' },
+};
+
+async function runForecast() {
+  const btn = $('#forecast-run');
+  const box = $('#forecast-result');
+
+  btn.disabled = true;
+  btn.textContent = 'Рахую…';
+  box.innerHTML = '<p class="pick-empty">Опитую сайт по кожному абітурієнту. Це може зайняти хвилину…</p>';
+
+  try {
+    const res = await fetch(api('/api/forecast', { id: currentId }));
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'Помилка розрахунку');
+    renderForecast(j);
+  } catch (err) {
+    box.innerHTML = '';
+    const e = el('div', 'pick-error');
+    e.append(el('strong', null, 'Не вдалося порахувати. '), document.createTextNode(err.message));
+    box.append(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Порахувати ще раз';
+  }
+}
+
+function renderForecast(f) {
+  const box = $('#forecast-result');
+  box.innerHTML = '';
+
+  // Прохідний — головне число. Коли є друга межа, показуємо вилку:
+  // точності тут узятися нізвідки, і вдавати її було б обманом.
+  const range = f.cutoffBest != null && f.cutoffBest !== f.cutoff
+    ? `${fmt(f.cutoffBest)} – ${fmt(f.cutoff)}`
+    : fmt(f.cutoff);
+
+  const sum = el('div', 'priority-summary');
+  sum.append(el('div', 'priority-big', range));
+  const what = f.source === 'actual' ? 'фактичний прохідний бал на' : 'прохідний бал на';
+  sum.append(el('div', 'priority-cap', `${what} ${f.seats} ${plural(f.seats, 'місце', 'місця', 'місць')}`));
+  box.append(sum);
+
+  const bits = [];
+  if (f.source === 'simulation') {
+    bits.push('за симуляцією сайту — це його власний розрахунок');
+  } else if (f.source === 'actual') {
+    bits.push('це не прогноз, а фактичний результат того року зі статусів заяв');
+  } else {
+    bits.push(`опитано ${f.checked} із ${f.total}`);
+    if (f.notChecked) bits.push(`${f.notChecked} далеко від межі — вважаємо, що лишаються`);
+    if (f.cutoffBest != null && f.cutoffBest !== f.cutoff) {
+      bits.push('нижня межа — якщо на вищих пріоритетах теж звільняться місця');
+    }
+  }
+  if (f.quotaTaken) bits.push(`${f.quotaTaken} квотників рахуються окремо`);
+  box.append(el('p', 'priority-note', bits.join(' · ')));
+
+  const table = el('table', 'priority-table');
+  const head = el('tr');
+  for (const h of ['Місце', 'Абітурієнт', 'Бал', 'Пр.', 'Доля']) head.append(el('th', null, h));
+  const thead = el('thead');
+  thead.append(head);
+  table.append(thead);
+
+  const body = el('tbody');
+  for (const r of f.budget) {
+    const look = FATE[r.outcome] || FATE.unknown;
+    const tr = el('tr', r.outcome === 'maybe-leaves' ? 'p-likely' : '');
+    tr.append(el('td', null, String(r.place)));
+    tr.append(el('td', null, r.name + (r.quota ? ` (${r.quota})` : '')));
+    tr.append(el('td', 'num', fmt(r.score)));
+    tr.append(el('td', null, String(r.priority ?? '—')));
+
+    const what = el('td');
+    what.append(el('span', `p-tag ${look.tag}`, look.label));
+    what.append(document.createTextNode(` ${r.reason}`));
+    if (r.where) what.append(el('div', 'p-where', r.where));
+    tr.append(what);
+    body.append(tr);
+  }
+  table.append(body);
+  box.append(table);
+
+  if (f.leaving.length) {
+    box.append(el('p', 'priority-note',
+      `Звідси йдуть на вищі пріоритети: ${f.leaving.length} ${plural(f.leaving.length, 'людина', 'людини', 'людей')}`));
+
+    const gone = el('table', 'priority-table');
+    const gbody = el('tbody');
+    for (const r of f.leaving) {
+      const look = FATE[r.outcome] || FATE.unknown;
+      const tr = el('tr', r.outcome === 'maybe-leaves' ? 'p-likely' : 'p-leaves');
+      tr.append(el('td', null, '—'));
+      tr.append(el('td', null, r.name));
+      tr.append(el('td', 'num', fmt(r.score)));
+      tr.append(el('td', null, String(r.priority ?? '—')));
+      const what = el('td');
+      what.append(el('span', `p-tag ${look.tag}`, look.label));
+      what.append(document.createTextNode(` ${r.reason}`));
+      if (r.where) what.append(el('div', 'p-where', r.where));
+      tr.append(what);
+      gbody.append(tr);
+    }
+    gone.append(gbody);
+    box.append(gone);
+  }
 }
 
 /* ══════════ Рік вступної кампанії ══════════ */
@@ -1013,6 +1136,13 @@ $('#table-toggle').addEventListener('click', () => {
   const open = $('#table-collapse').classList.toggle('hidden');
   $('#table-toggle').querySelector('.caret').textContent = open ? '▸' : '▾';
 });
+
+$('#forecast-toggle').addEventListener('click', () => {
+  const open = $('#forecast-collapse').classList.toggle('hidden');
+  $('#forecast-toggle').querySelector('.caret').textContent = open ? '▸' : '▾';
+});
+
+$('#forecast-run').addEventListener('click', runForecast);
 
 $('#calc-tabs').addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');

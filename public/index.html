@@ -133,6 +133,21 @@
       </div>
     </section>
 
+    <!-- Розклад цілком: хто з поданих реально займе місця -->
+    <section class="card">
+      <h2 class="card-title collapsible" id="forecast-toggle">
+        <span class="caret">▸</span> Хто куди потрапить
+      </h2>
+      <div id="forecast-collapse" class="hidden">
+        <p class="priority-note">
+          Опитує сайт по кожному абітурієнту й перескладає список із тих, хто
+          лишається тут. Займає до хвилини; повторний перерахунок миттєвий.
+        </p>
+        <button id="forecast-run" class="btn btn-ghost">Порахувати розклад</button>
+        <div id="forecast-result"></div>
+      </div>
+    </section>
+
     <!-- Повний рейтинг — за замовчуванням згорнутий, головне вище -->
     <section class="card">
       <h2 class="card-title collapsible" id="table-toggle">
